@@ -1,12 +1,11 @@
 cmake_minimum_required(VERSION 3.25)
-project(SdlImgViewer LANGUAGES CXX)
+project(SdlImgViewer LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(OpenGL REQUIRED)
 find_package(SDL3 CONFIG REQUIRED)
-#find_package(imgui CONFIG REQUIRED)
 #find_package(Boost REQUIRED COMPONENTS system)
 
 find_program(GLAD_EXECUTABLE glad REQUIRED)
@@ -21,10 +20,17 @@ execute_process(
 
 add_executable(${PROJECT_NAME}
   src/main.cpp
+  src/MainWindow.hpp
+  src/MainWindow.cpp
   # your sources...
 )
 
+target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/glad/include)
+target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/external/imgui)
+
+
 add_library(imgui STATIC
+  external/imgui/imgui.h
   external/imgui/imgui.cpp
   external/imgui/imgui_draw.cpp
   external/imgui/imgui_tables.cpp
@@ -34,9 +40,21 @@ add_library(imgui STATIC
   external/imgui/backends/imgui_impl_opengl3.cpp
 )
 
+target_include_directories(imgui PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/external/imgui)
+
+add_library(glad STATIC
+  ${CMAKE_SOURCE_DIR}/src/glad/include/glad/gl.h
+  ${CMAKE_SOURCE_DIR}/src/glad/src/gl.c
+)
+
+target_include_directories(glad PUBLIC
+  ${CMAKE_SOURCE_DIR}/src/glad/include
+)
+
 target_link_libraries(${PROJECT_NAME} PRIVATE
   SDL3::SDL3
   OpenGL::GL
   imgui
+  glad
 #  Boost::system
 )
