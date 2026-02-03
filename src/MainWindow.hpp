@@ -1,10 +1,10 @@
 #pragma once
 
+#include "FileTreeView.hpp"
 #include <SDL3/SDL.h>
 
 struct MainWindowConfig {
 	const char *title = "SdlImgViewer";
-	bool		fullscreen = true;
 	int			gl_major = 3;
 	int			gl_minor = 3;
 };
@@ -38,4 +38,7 @@ private:
 	bool  show_right_ = true;
 	bool  show_status_ = true;
 	float left_w_ = 20.0f;
+
+
+	FileTreeView file_tree_;
 };

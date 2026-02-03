@@ -83,9 +83,8 @@ void MainWindow::init() {
 
 	set_gl_attrs(cfg_.gl_major, cfg_.gl_minor);
 
-	Uint32 flags = SDL_WINDOW_OPENGL | SDL_WINDOW_HIGH_PIXEL_DENSITY;
-	if (cfg_.fullscreen)
-		flags |= SDL_WINDOW_FULLSCREEN;
+	Uint32 flags = SDL_WINDOW_OPENGL | SDL_WINDOW_HIGH_PIXEL_DENSITY
+				   | SDL_WINDOW_MAXIMIZED | SDL_WINDOW_RESIZABLE;
 
 	window_ = SDL_CreateWindow(cfg_.title, 0, 0, flags);
 	assert(window_);
@@ -118,6 +117,41 @@ void MainWindow::init() {
 	assert(imres);
 
 	running_ = true;
+
+	{
+		std::vector<FileTreeView::Node> nodes;
+
+		auto add = [&](int id, int parent, bool is_dir, const char *name) {
+			FileTreeView::Node n;
+			n.id = id;
+			n.parent_id = parent;
+			n.is_dir = is_dir;
+			n.name = name;
+			nodes.push_back(std::move(n));
+		};
+
+		add(1, -1, true, "/");
+		add(2, 1, true, "home");
+		add(3, 2, true, "roman");
+		add(10, 3, true, "Pictures");
+		add(11, 3, true, "Downloads");
+		add(12, 3, true, "Documents");
+		add(4, 1, true, "etc");
+		add(20, 4, true, "ssh");
+
+		// Build children lists (quick and dirty)
+		for (auto &n : nodes)
+			n.children.clear();
+		for (const auto &n : nodes) {
+			if (n.parent_id >= 0) {
+				for (auto &p : nodes)
+					if (p.id == n.parent_id)
+						p.children.push_back(n.id);
+			}
+		}
+
+		file_tree_.setModel(std::move(nodes), 1);
+	}
 }
 
 void MainWindow::run() {
@@ -138,6 +172,9 @@ void MainWindow::pollEvents() {
 
 		if (e.type == SDL_EVENT_QUIT
 			|| e.type == SDL_EVENT_WINDOW_CLOSE_REQUESTED) {
+			running_ = false;
+		}
+		if (e.type == SDL_EVENT_KEY_DOWN && e.key.key == SDLK_ESCAPE) {
 			running_ = false;
 		}
 	}
@@ -212,8 +249,7 @@ void MainWindow::drawUi() {
 		ImVec2(content_pos.x + left_w_ + splitter_w, content_pos.y);
 	ImVec2 right_size = ImVec2(size.x - left_w_ - splitter_w, content_h);
 	if (show_left_)
-		DrawColorPanel("fileTree", left_pos, left_size,
-					   IM_COL32(60, 90, 160, 255));
+		file_tree_.draw(left_pos, left_size);
 
 	if (show_right_)
 		DrawColorPanel("imagesView", right_pos, right_size,

@@ -22,6 +22,7 @@ add_executable(${PROJECT_NAME}
   src/main.cpp
   src/MainWindow.hpp
   src/MainWindow.cpp
+  src/FileTreeView.hpp src/FileTreeView.cpp
   # your sources...
 )
 
